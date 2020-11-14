@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "ml_api"
+version = "0.1.0"
+description = ""
+authors = ["Mariano"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pydantic = "1.6.1"
+numpy = "1.18.4"
+scipy = "1.4.1"
+keras = "2.4.3"
+tensorflow = "2.3.0"
+sentiment-analysis-spanish = "0.0.24"
+redis = "3.5.3"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

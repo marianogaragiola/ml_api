@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "ml_api"
+version = "0.1.0"
+description = ""
+authors = ["Mariano"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+python-decouple = "3.3"
+PyYAML = "5.3.1"
+uvicorn = "0.11.8"
+fastapi = "0.61.1"
+typer = "0.3.2"
+redis = "3.5.3"
+
+[tool.poetry.dev-dependencies]
+
+[tool.poetry.scripts]
+ml_api = 'ml_api.manage:run'
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
