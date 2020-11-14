@@ -1,0 +1,16 @@
+FROM python:3.8.5-slim-buster
+
+RUN mkdir /app
+WORKDIR /app
+
+RUN python3 -m pip install poetry==1.1.3
+COPY ./src/ml_api/pyproject.toml .
+RUN poetry config virtualenvs.create false && poetry install
+
+EXPOSE 8000
+
+COPY ./src/ml_api /app/ml_api
+
+ENV PYTHONPATH=/app
+
+CMD ["python3", "ml_api/cli/manage.py", "start-reload"]

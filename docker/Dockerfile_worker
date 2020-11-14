@@ -1,0 +1,12 @@
+FROM python:3.8.5-slim-buster
+
+RUN mkdir /worker
+WORKDIR /worker
+
+RUN python3 -m pip install poetry==1.1.3
+COPY ./src/worker/pyproject.toml .
+RUN poetry config virtualenvs.create false && poetry install
+
+COPY ./src/worker /worker/
+
+CMD ["python3", "worker.py"]
