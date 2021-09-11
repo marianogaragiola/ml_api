@@ -4,30 +4,25 @@ This file contains the Machine Learning model ready to use it for predictions
 import numpy as np
 from sentiment_analysis_spanish import sentiment_analysis
 
-from analist.validators import SentenceSentiment
-from analist.settings import (
-    THRESHOLDS,
-    SENTIMENTS,
-    REDIS_QUEUE
-)
+from analist.schemas import SentenceSentiment
+from analist.settings import settings
 
 
-class SentimentAnalyser():
+class SentimentAnalyser:
     """
     Class used to predict the sentiment score prediction model
     """
 
     def __init__(self):
         self._model = sentiment_analysis.SentimentAnalysisSpanish()
+        self._sentiments = settings.SENTIMENTS
 
     def predict(self, data: str) -> float:
-        """Runs the prediction
-        """
+        """Runs the prediction"""
         score = self._model.sentiment(data)
-        sentiment = SENTIMENTS[np.digitize(score, bins=THRESHOLDS)]
+        sentiment = self._sentiments[
+            np.digitize(score, bins=settings.THRESHOLDS)
+        ]
         return SentenceSentiment(
-            sentence=data,
-            score=score,
-            sentiment=sentiment
+            sentence=data, score=score, sentiment=sentiment
         )
-

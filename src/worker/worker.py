@@ -8,12 +8,13 @@ import logging
 from time import sleep
 import json
 
-from analist.settings import REDIS_QUEUE
+from analist.settings import settings
 from analist.model import SentimentAnalyser
-from analist.communication import redis_connection
+from analist.communication import ConsumerBuilder, KafkaSender
+from analist.schemas import TaskRequest, SentenceSentiment
 
 
-class Worker():
+class Worker:
     """
     Class responsible for processing task in redis.
 
@@ -21,23 +22,30 @@ class Worker():
     -------
     work
     """
+
     def __init__(self):
         """
         Class constructor
         """
 
-        self._logger = logging.getLogger("Redis Worker")
+        self._logger = logging.getLogger("Worker")
         self._logger.setLevel(logging.INFO)
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.INFO)
         formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
         self._logger.info("Initializing worker")
-        self._redis_conn = redis_connection()
-        self._redis_queue = REDIS_QUEUE
+        self._consumer = ConsumerBuilder.build(
+            broker_url=f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
+            topic=settings.BROKER_CONSUMER_TOPIC,
+        )
+        self._producer = KafkaSender(
+            broker_url=f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
+            topic=settings.BROKER_PRODUCER_TOPIC,
+        )
         self._predictor = SentimentAnalyser()
 
     def work(self):
@@ -45,29 +53,21 @@ class Worker():
         Run an infinite loop that is reading task in Redis queue and
         makes the prediction with the Machine Learning model
         """
-        self._logger.info("Waiting for jobs in Redis")
-        while True:
-            job_raw_data = self._redis_conn.lpop(self._redis_queue)
-            if not job_raw_data:
-                sleep(0.05)
-                continue
-            self._do_task(job_raw_data)
-            sleep(0.05)
+        self._logger.info("Waiting for task event in Broker")
+        for task_event in self._consumer:
+            self._logger.info(f"Processing job {task_event.value.job_id}")
+            prediction = self._do_task(task_event.value)
+            self._logger.info(f"Result from job {prediction.dict()}")
+            self._producer.send(key=task_event.key, value=prediction)
 
-    def _do_task(self, raw_data):
+    def _do_task(self, data: TaskRequest) -> SentenceSentiment:
         """
-        Makes the prediction on the data read from Redis and returns the
-        prediction in Redis with job_id
+        Makes a prediction on the data
         """
-        job_data = json.loads(raw_data)
-        job_id = job_data['job_id']
-        text = job_data["text"]
-        self._logger.info(f"Processing job {job_id}")
-        sentiment = self._predictor.predict(text)
-        self._logger.info(f"Result from job {sentiment.dict()}")
-        self._redis_conn.set(job_id, sentiment.json())
+        sentiment = self._predictor.predict(data.text)
+        return sentiment
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     worker = Worker()
     worker.work()
