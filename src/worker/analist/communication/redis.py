@@ -1,10 +1,6 @@
 import redis
 
-from analist.settings import (
-    REDIS_HOST,
-    REDIS_PORT,
-    REDIS_DB
-)
+from analist.settings import settings
 
 
 def redis_connection():
@@ -12,8 +8,8 @@ def redis_connection():
     Connects to Redis DB and returns the connection
     """
     conn = redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB
+        host=settings.REDIS_HOST,
+        port=settings.REDIS_PORT,
+        db=settings.REDIS_DB,
     )
     return conn
