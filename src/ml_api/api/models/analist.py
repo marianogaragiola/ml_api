@@ -7,33 +7,30 @@ import json
 from time import sleep
 
 from fastapi import Request
+from fastapi.encoders import jsonable_encoder
 
-from ml_api.settings import REDIS_QUEUE
-from ml_api.api.validators import Sentence, SentenceSentiment
+from ml_api.settings import settings
+from ml_api.api.schemas import Sentence, SentenceSentiment, TaskRequest
 
 
 def evaluate_sentiment(request: Request, sentence: Sentence):
     """
     Sends the job to Redis queue and waits for the result.
     """
-    conn = request.app.state.connection
+    producer = request.app.state.producer
 
-    job_id = str(uuid4())
-    data = {
-        "job_id": job_id,
-        "text": sentence.text
-    }
-    conn.rpush(
-        REDIS_QUEUE,
-        json.dumps(data)
+    task_request = TaskRequest(job_id=uuid4(), text=sentence.text)
+    producer.send(
+        settings.BROKER_TOPIC,
+        key=str(task_request.job_id).encode(),
+        value=json.dumps(jsonable_encoder(task_request)).encode(),
     )
+    producer.flush()
 
-    while True:
-        result = conn.get(job_id)
-        if result is not None:
-            result = json.loads(result)
-            conn.delete(job_id)
-            break
-        sleep(0.05)
+    result = {
+        "sentence": "text",
+        "score": 0.5,
+        "sentiment": "neutral",
+    }
     sentiment = SentenceSentiment(**result)
     return sentiment
