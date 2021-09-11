@@ -1,1 +1,1 @@
-from ml_api.api.models.analist import evaluate_sentiment
+from ml_api.api.models.analist import evaluate_sentiment, ResultNotFound
