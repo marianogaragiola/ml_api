@@ -7,13 +7,10 @@ x-logging: &logging
     max-size: 10m
 
 services:
-  redis:
-    image: redis:6.0.8
-    logging: *logging
-    restart: unless-stopped
-
   ml-api:
     image: ml_api:latest 
+    hostname: ml-api
+    container_name: ml-api
     restart: unless-stopped
     build:
       context: ..
@@ -21,25 +18,82 @@ services:
     ports:
       - 8000:8000
     logging: *logging
+    tty: true
     depends_on:
-      - redis
+      - broker
+      - zookeeper
     init: true
 
   worker:
     image: worker:latest 
+    hostname: worker
+    container_name: worker
     restart: unless-stopped
     build:
       context: ..
       dockerfile: docker/Dockerfile_worker
     depends_on:
-      - redis
+      - broker
+      - zookeeper
       - ml-api
     working_dir: /worker
     command: python3 worker.py
     logging: *logging
     init: true
 
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    hostname: zookeeper
+    container_name: zookeeper
+    init: true
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+
+  broker:
+    image: confluentinc/cp-kafka:6.2.0
+    hostname: broker
+    container_name: broker
+    init: true
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - broker:/var/lib/kafka/data
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: unless-stopped
+    ports:
+      - "9001:9000"
+    depends_on:
+      - broker
+    environment:
+      KAFKA_BROKERCONNECT: "broker:9092"
+
 networks:
   default:
     external:
       name: $NETWORK_NAME
+
+volumes:
+  broker:
+  zookeeper_data:
+  zookeeper_logs:
+
+
