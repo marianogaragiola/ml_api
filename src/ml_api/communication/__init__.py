@@ -1,1 +1,4 @@
-from ml_api.communication.kafka import create_kafka_producer
+from ml_api.communication.kafka import (
+    KafkaSender,
+    KafkaReader,
+)

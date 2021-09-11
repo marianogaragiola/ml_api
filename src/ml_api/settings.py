@@ -6,7 +6,8 @@ class APISettings(BaseSettings):
 
     BROKER_HOST: str = "broker"
     BROKER_PORT: int = 9092
-    BROKER_TOPIC: str = "task-request"
+    BROKER_PRODUCER_TOPIC: str = "task-request"
+    BROKER_CONSUMER_TOPIC: str = "task-computed"
 
 
 settings = APISettings()
