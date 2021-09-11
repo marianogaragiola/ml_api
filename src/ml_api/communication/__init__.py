@@ -1,1 +1,1 @@
-from ml_api.communication.redis import redis_connection
+from ml_api.communication.kafka import create_kafka_producer
