@@ -1,9 +1,12 @@
+from pydantic import BaseSettings
 
-__version__ = "1.0.0"
 
-API_VERSION = __version__
+class APISettings(BaseSettings):
+    API_VERSION: str = "1.0.0"
 
-REDIS_HOST = "redis"
-REDIS_PORT = 6379
-REDIS_DB = 0
-REDIS_QUEUE = "service_queue"
+    BROKER_HOST: str = "broker"
+    BROKER_PORT: int = 9092
+    BROKER_TOPIC: str = "task-request"
+
+
+settings = APISettings()
