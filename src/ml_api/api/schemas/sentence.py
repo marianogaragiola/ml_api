@@ -23,7 +23,7 @@ class SentenceSentiment(BaseModel):
     class Config:
         schema_extra = {
             "example": {
-                "sentence": {"text": "Some text"},
+                "sentence": "Some text",
                 "score": 0.643,
                 "sentimente": "neutral",
             }

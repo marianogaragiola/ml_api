@@ -4,3 +4,4 @@ from ml_api.api.schemas.sentence import (
     SentenceSentiment,
     TaskRequest,
 )
+from ml_api.api.schemas.message import Message
