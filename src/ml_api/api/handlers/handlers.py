@@ -2,15 +2,27 @@ from typing import Callable
 
 from fastapi import FastAPI
 
-from ml_api.communication import create_kafka_producer
+from ml_api.communication import KafkaSender, KafkaReader
+from ml_api.settings import settings
 
 
 def _startup_model(app: FastAPI) -> None:
-    producer = create_kafka_producer()
+    producer = KafkaSender(
+        f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
+        settings.BROKER_PRODUCER_TOPIC,
+    )
+    consumer = KafkaReader(
+        f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
+        settings.BROKER_CONSUMER_TOPIC,
+    )
+    consumer.start()
     app.state.producer = producer
+    app.state.consumer = consumer
 
 
 def _shutdown_model(app: FastAPI) -> None:
+    app.state.consumer.stop()
+    app.state.consumer = None
     app.state.producer = None
 
 
