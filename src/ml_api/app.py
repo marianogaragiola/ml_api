@@ -1,7 +1,7 @@
 """
 This file contains the main app, and some configs.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from ml_api.api.schemas import ApiVersionModel
@@ -29,6 +29,14 @@ app.add_middleware(
 )
 
 
+app.include_router(
+    sentiment_analysis.router, prefix="/sentiment", tags=["sentiment"]
+)
+
+app.add_event_handler("startup", start_app_handler(app))
+app.add_event_handler("shutdown", stop_app_handler(app))
+
+
 @app.get("/version", tags=["version"], response_model=ApiVersionModel)
 def get_api_version():
     """Get API information."""
@@ -36,11 +44,3 @@ def get_api_version():
     return ApiVersionModel(
         title=app.title, description=app.description, version=app.version
     )
-
-
-app.include_router(
-    sentiment_analysis.router, prefix="/sentiment", tags=["sentiment"]
-)
-
-app.add_event_handler("startup", start_app_handler(app))
-app.add_event_handler("shutdown", stop_app_handler(app))
