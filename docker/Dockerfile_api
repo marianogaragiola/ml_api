@@ -10,7 +10,8 @@ RUN poetry config virtualenvs.create false && poetry install
 EXPOSE 8000
 
 COPY ./src/ml_api /app/ml_api
+COPY ./src/ml_api/static /app/static
 
 ENV PYTHONPATH=/app
 
-CMD ["python3", "ml_api/cli/manage.py", "start-reload"]
+CMD ["python3", "ml_api/cli/manage.py", "start"]
