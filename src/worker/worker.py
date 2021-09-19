@@ -41,6 +41,7 @@ class Worker:
         self._consumer = ConsumerBuilder.build(
             broker_url=f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
             topic=settings.BROKER_CONSUMER_TOPIC,
+            group_id=settings.BROKER_GROUP_ID,
         )
         self._producer = KafkaSender(
             broker_url=f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",

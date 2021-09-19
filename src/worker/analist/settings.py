@@ -8,6 +8,7 @@ class WorkerSettings(BaseSettings):
     BROKER_PORT: int = 9092
     BROKER_CONSUMER_TOPIC: str = "task-request"
     BROKER_PRODUCER_TOPIC: str = "task-computed"
+    BROKER_GROUP_ID: str = "worker"
 
     THRESHOLDS: List[float] = [0.25, 0.75]
     SENTIMENTS: List[str] = ["negative", "neutral", "positive"]
