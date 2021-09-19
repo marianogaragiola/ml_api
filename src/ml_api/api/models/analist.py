@@ -44,15 +44,15 @@ def evaluate_sentiment(
 
     while True:
         try:
-            event = consumer.get()
-        except Empty as exc:
+            event = consumer.query(str(task_request.job_id))
+        except KeyError:
+            sleep(0.01)
+            continue
+        if not event:
             raise ResultNotFound(
                 f"Unable to retrieve output for task {task_request.job_id}"
-            ) from exc
-
-        if event.key == str(task_request.job_id):
-            sentiment = event.value
-            break
-        sleep(0.25)
+            )
+        sentiment = event
+        break
 
     return sentiment

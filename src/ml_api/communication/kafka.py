@@ -1,14 +1,15 @@
 import json
+import time
 from uuid import UUID
 from typing import Optional
 from threading import Thread
-from queue import Queue
 
 from kafka import KafkaProducer, KafkaConsumer
+from kafka.errors import NoBrokersAvailable
 from pydantic import BaseModel
 from fastapi.encoders import jsonable_encoder
 
-from ml_api.api.schemas import TaskRequest, SentenceSentiment
+from ml_api.api.schemas import SentenceSentiment
 
 
 def value_serializer(value: BaseModel) -> bytes:
@@ -62,7 +63,7 @@ class KafkaReader:
             key_deserializer=lambda x: x.decode(),
         )
         self._thread = Thread(target=self._consume, daemon=True)
-        self._msg_queue = Queue(maxsize=max_elements)
+        self._msg_queue = {}
 
     def start(self):
         self._thread.start()
@@ -73,12 +74,10 @@ class KafkaReader:
 
     def _consume(self):
         for msg in self._consumer:
-            if self._msg_queue.full():
-                self._msg_queue.get(block=True)
-            self._msg_queue.put(msg, block=True)
+            self._msg_queue[msg.key] = msg.value
 
-    def get(self):
-        return self._msg_queue.get(block=True, timeout=1)
+    def query(self, key: str):
+        return self._msg_queue.pop(key)
 
 
 class KafkaSender:
@@ -96,9 +95,23 @@ class KafkaSender:
         """
 
         self._topic = topic
-        self._producer = KafkaProducer(
-            bootstrap_servers=broker_url, value_serializer=value_serializer
-        )
+        self._producer = self._create_producer(broker_url, topic)
+
+    @staticmethod
+    def _create_producer(broker_url: str, topic: str) -> KafkaProducer:
+        while True:
+            try:
+                print("Creating Kafka Producer")
+                producer = KafkaProducer(
+                    bootstrap_servers=broker_url, value_serializer=value_serializer
+                )
+            except NoBrokersAvailable as exc:
+                time.sleep(0.5)
+                continue
+            finally:
+                break
+
+        return producer
 
     def send(self, key: UUID, value):
         """sends a new message to kafka topic.
