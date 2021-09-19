@@ -13,6 +13,9 @@ fastapi = "0.61.1"
 typer = "0.3.2"
 redis = "3.5.3"
 kafka-python = "2.0.2"
+jinja2 = "3.0.1"
+aiofiles = "0.7.0"
+gunicorn = "20.0.4"
 
 [tool.poetry.dev-dependencies]
 ipython = "7.27.0"
