@@ -16,7 +16,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile_api
     ports:
-      - 8000:8000
+      - 8001:8000
     logging: *logging
     tty: true
     depends_on:
@@ -26,8 +26,8 @@ services:
 
   worker:
     image: worker:latest 
-    hostname: worker
-    container_name: worker
+    #hostname: worker
+    #container_name: worker
     restart: unless-stopped
     build:
       context: ..
@@ -95,5 +95,3 @@ volumes:
   broker:
   zookeeper_data:
   zookeeper_logs:
-
-
