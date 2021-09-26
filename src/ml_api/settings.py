@@ -21,6 +21,10 @@ class APISettings(BaseSettings):
     BROKER_PRODUCER_TOPIC: str = "task-request"
     BROKER_CONSUMER_TOPIC: str = "task-computed"
 
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
     APP_MODULE: str = "ml_api.app:app"
 
 
