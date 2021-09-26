@@ -37,14 +37,19 @@ services:
       - zookeeper
       - ml-api
     working_dir: /worker
+    tty: true
+    #command: bash
     command: python3 worker.py
     logging: *logging
     init: true
+    #volumes:
+      #- ../src/worker:/worker
 
   zookeeper:
     image: confluentinc/cp-zookeeper:6.2.0
     hostname: zookeeper
     container_name: zookeeper
+    logging: *logging
     init: true
     ports:
       - "2181:2181"
@@ -59,6 +64,7 @@ services:
     image: confluentinc/cp-kafka:6.2.0
     hostname: broker
     container_name: broker
+    logging: *logging
     init: true
     depends_on:
       - zookeeper
@@ -85,6 +91,13 @@ services:
       - broker
     environment:
       KAFKA_BROKERCONNECT: "broker:9092"
+
+  redis:
+    image: redis:6.0.8
+    logging: *logging
+    ports:
+      - 6379:6379
+    restart: unless-stopped
 
 networks:
   default:
