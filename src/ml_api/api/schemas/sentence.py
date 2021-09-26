@@ -25,6 +25,6 @@ class SentenceSentiment(BaseModel):
             "example": {
                 "sentence": "Some text",
                 "score": 0.643,
-                "sentimente": "neutral",
+                "sentiment": "neutral",
             }
         }
