@@ -10,6 +10,7 @@ from queue import Empty
 from fastapi import Request
 
 from ml_api.settings import settings
+from ml_api.communication import ValueNotFound
 from ml_api.api.schemas import Sentence, SentenceSentiment, TaskRequest
 
 
@@ -34,7 +35,7 @@ def evaluate_sentiment(
     SentenceSentiment
     """
     producer = request.app.state.producer
-    consumer = request.app.state.consumer
+    consumer = request.app.state.connection
 
     task_request = TaskRequest(job_id=uuid4(), text=sentence.text)
     producer.send(
@@ -42,17 +43,9 @@ def evaluate_sentiment(
         value=task_request,
     )
 
-    while True:
-        try:
-            event = consumer.query(str(task_request.job_id))
-        except KeyError:
-            sleep(0.01)
-            continue
-        if not event:
-            raise ResultNotFound(
-                f"Unable to retrieve output for task {task_request.job_id}"
-            )
-        sentiment = event
-        break
-
+    try:
+        job_result = consumer.get(task_request.job_id)
+    except ValueNotFound as exc:
+        raise ResultNotFound from exc
+    sentiment = SentenceSentiment.parse_obj(job_result)
     return sentiment
