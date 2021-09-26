@@ -10,7 +10,7 @@ import json
 
 from analist.settings import settings
 from analist.model import SentimentAnalyser
-from analist.communication import ConsumerBuilder, KafkaSender
+from analist.communication import ConsumerBuilder, KafkaSender, RedisProducer
 from analist.schemas import TaskRequest, SentenceSentiment
 
 
@@ -43,9 +43,10 @@ class Worker:
             topic=settings.BROKER_CONSUMER_TOPIC,
             group_id=settings.BROKER_GROUP_ID,
         )
-        self._producer = KafkaSender(
-            broker_url=f"{settings.BROKER_HOST}:{settings.BROKER_PORT}",
-            topic=settings.BROKER_PRODUCER_TOPIC,
+        self._producer = RedisProducer(
+            host=settings.REDIS_HOST,
+            port=settings.REDIS_PORT,
+            db=settings.REDIS_DB,
         )
         self._predictor = SentimentAnalyser()
 
